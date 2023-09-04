@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 from config import DevelopmentConfig, TestingConfig
 from extensions import login_manager, db
 from models.user import User
@@ -17,13 +18,13 @@ def create_app(config_name='development'):
         app.config.from_object(DevelopmentConfig)
     elif config_name == 'testing':
         app.config.from_object(TestingConfig)
-
-    # Initialize database and authentication
-    db.init_app(app)
-    login_manager.init_app(app)
-    with app.app_context():
-        db.create_all()
         
+    migrate = Migrate(app, db)  # Initialize Flask-Migrate after SQLAlchemy
+
+    # Initialize authentication
+    db.init_app(app)  # Keep this line for Flask-SQLAlchemy initialization
+    login_manager.init_app(app)
+
     # Load env variables
     load_dotenv()
 
@@ -37,3 +38,4 @@ def create_app(config_name='development'):
         return User.query.get(int(user_id))
 
     return app
+

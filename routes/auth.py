@@ -1,48 +1,49 @@
 from flask import Blueprint, request, jsonify
-import pyrebase
-import os
+from extensions import db  # Import the db object and User model
+from models.user import User  # Import the User model
+from werkzeug.security import check_password_hash, generate_password_hash
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-firebase_config = {
-    "apiKey": os.getenv("FIREBASE_API_KEY"),
-    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
-    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
-    "projectId": os.getenv("FIREBASE_PROJECT_ID"),
-    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
-    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
-    "appId": os.getenv("FIREBASE_APP_ID"),
-    "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID")
-}
-
-firebase = pyrebase.initialize_app(firebase_config)
-auth = firebase.auth()
-
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    # Handle user registration logic here
-    email = request.json.get('email')  # Get the email from the request
-    password = request.json.get('password')
+    # Get user registration data from the request
+    data = request.json
+    user = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
 
-    try:
-        # Create a new user with the email and password
-        user = auth.create_user_with_email_and_password(email, password)
-        return jsonify({"message": "User registered successfully"})
-    except:
-        return jsonify({"error": "Registration failed"}, 400)
+    # Check if the email is already registered
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"error": "Email already registered"}), 400
+
+    # Create a new user
+    new_user = User(email=email, user=user)
+    new_user.set_password(password)
+
+    # Add the new user to the database
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"message": "User registered successfully"})
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    email = request.json.get('email')
-    password = request.json.get('password')
+    # Get login data from the request
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
 
-    try:
-        # Sign in the user with email and password
-        user = auth.sign_in_with_email_and_password(email, password)
-        print("User signed in successfully")
-        return jsonify({"access_token": user})
-    except Exception as e:
-        return jsonify({"error": "Login failed"}, 401)
+    # Find the user by email
+    user = User.query.filter_by(email=email).first()
+
+    if user and user.check_password(password):
+        # User exists and password is correct
+        # You can implement token-based authentication here if needed
+        return jsonify({"message": "Login successful"})
+    else:
+        return jsonify({"error": "Login failed"}), 401
 
 @auth_bp.route('/protected', methods=['GET'])
 def protected_route():
