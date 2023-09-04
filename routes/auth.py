@@ -5,28 +5,32 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/auth/register', methods=['POST'])
 def register():
-    # Get user registration data from the request
+    # Get user data from the request
     data = request.json
-    user = data.get('username')
     email = data.get('email')
+    username = data.get('username')  # Ensure you get the username from the request
     password = data.get('password')
 
-    # Check if the email is already registered
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({"error": "Email already registered"}), 400
+    # Check if the required fields are provided
+    if not email or not username or not password:
+        return jsonify({'message': 'Please provide all required fields.'}), 400
 
-    # Create a new user
-    new_user = User(email=email, user=user)
-    new_user.set_password(password)
+    # Create a new user record
+    user = User(email=email, username=username, password=password)
 
-    # Add the new user to the database
-    db.session.add(new_user)
-    db.session.commit()
+    # Add the user to the database and commit the transaction
+    try:
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({'message': 'User registered successfully.'}), 201
+    except Exception as e:
+        db.session.rollback()  # Rollback the transaction in case of an error
+        return jsonify({'message': 'An error occurred while registering the user.'}), 500
 
-    return jsonify({"message": "User registered successfully"})
+if __name__ == '__main__':
+    app.run()
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
