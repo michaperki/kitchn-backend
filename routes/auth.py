@@ -29,9 +29,6 @@ def register():
         db.session.rollback()  # Rollback the transaction in case of an error
         return jsonify({'message': 'An error occurred while registering the user.'}), 500
 
-if __name__ == '__main__':
-    app.run()
-
 @auth_bp.route('/login', methods=['POST'])
 def login():
     # Get login data from the request
