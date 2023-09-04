@@ -18,7 +18,8 @@ def register():
         return jsonify({'message': 'Please provide all required fields.'}), 400
 
     # Create a new user record
-    user = User(email=email, username=username, password=password)
+    user = User(email=email, username=username)
+    user.set_password(password)
 
     # Add the user to the database and commit the transaction
     try:
