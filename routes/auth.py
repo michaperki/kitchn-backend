@@ -5,7 +5,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-@auth_bp.route('/auth/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     # Get user data from the request
     data = request.json
