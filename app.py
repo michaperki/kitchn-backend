@@ -1,13 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
-from config import DevelopmentConfig, TestingConfig
+from config import DevelopmentConfig, ProductionConfig
 from extensions import login_manager, db
 from models.user import User
 from routes import auth, data, errors
 from dotenv import load_dotenv
 
-def create_app(config_name='development'):
+def create_app(config_name='production'):
     app = Flask(__name__)
     CORS(app, resources={
         r"/auth/*": {"origins": ["https://michaperki.github.io", "http://localhost:3000"]},
@@ -16,8 +16,8 @@ def create_app(config_name='development'):
         
     if config_name == 'development':
         app.config.from_object(DevelopmentConfig)
-    elif config_name == 'testing':
-        app.config.from_object(TestingConfig)
+    elif config_name == 'production':
+        app.config.from_object(ProductionConfig)
         
     migrate = Migrate(app, db)  # Initialize Flask-Migrate after SQLAlchemy
 

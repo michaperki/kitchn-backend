@@ -6,7 +6,6 @@ class DevelopmentConfig:
     SECRET_KEY = 'your-secret-key'  # Replace with a strong, random secret key
 
     # Database Configuration (example for SQLAlchemy)
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'  # SQLite database for development
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Disable SQLAlchemy event tracking for performance
 
     # Flask-Login Configuration (example)
